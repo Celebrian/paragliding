@@ -1,5 +1,14 @@
 # Assignment 2: IGC track viewer extended
 
+## The following will need to be added as environment variables for the program to run:
+
+```
+PORT=<port>
+MONGO_HOST=<host>
+MONGO_USER=<user>
+MONGO_PASSWORD=<password>
+MONGO_DATABASE=<dbName>
+```
 
 ## About
 
@@ -24,13 +33,6 @@ You can re-use Assignment 1 codebase, and substitute the internal in-memory stor
    * The ticker end-point will be implemented as a Cloud Function [OPTIONAL] or as normal end-point within your Heroku deployment.
    * The "clock" trigger will be implemented in Go as independent executable deployed on OpenStack.
 
-### The following will need to be added as environment variables for the program to run:
-
-    PORT=<port>
-    MONGO_HOST=<host>
-    MONGO_USER=<user>
-    MONGO_PASSWORD=<password>
-    MONGO_DATABASE=<dbName>
 
 ## General rules
 

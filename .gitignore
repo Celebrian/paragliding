@@ -14,3 +14,7 @@
 # IntelliJ IDEA spesific files
 *.iml
 .idea/
+
+# Heroku environment variables
+.env
+

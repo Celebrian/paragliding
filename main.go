@@ -18,12 +18,12 @@ const (
 )
 
 type IGCObject struct {
-	URL			string	`json:"track_scr_url" bson:"track_scr_url"`
-	Pilot		string	`json:"pilot" bson:"pilot"`
-	HDate		string	`json:"H_date" bson:"H_date"`
-	Glider		string	`json:"glider" bson:"glider"`
-	GliderID	string	`json:"glider_id" bson:"glider_id"`
-	TrackLength	float64	`json:"track_length" bson:"track_length"`
+	URL			string		`json:"track_scr_url" bson:"track_scr_url"`
+	Pilot		string		`json:"pilot" bson:"pilot"`
+	HDate		time.Time	`json:"H_date" bson:"H_date"`
+	Glider		string		`json:"glider" bson:"glider"`
+	GliderID	string		`json:"glider_id" bson:"glider_id"`
+	TrackLength	float64		`json:"track_length" bson:"track_length"`
 }
 
 var db *mgo.Database

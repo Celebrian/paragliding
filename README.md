@@ -1,3 +1,6 @@
+# Assignment 2: IGC track viewer extended
+
+
 ## About
 
 Similar to Assignment 1, we will develop an online service that will allow users to browse information about IGC files. IGC is an international file format for soaring track files that are used by paragliders and gliders. The program will store IGC files metadata in a NoSQL Database (persistent storage). The system will generate events and it will monitor for new events happening from the outside services. The project will make use of Heroku, OpenStack, and AWS Cloud functions. 
@@ -11,25 +14,31 @@ You can re-use Assignment 1 codebase, and substitute the internal in-memory stor
 
    * You will use **Go modules** for your dependencies and for your own module. 
    * For the development of the IGC processing, you will use an open source IGC library for Go: **[goigc](https://github.com/marni/goigc)**
-   * You will use **MongoDB**. The recommended driver for MongoDB is the [official MongoDB Go driver](https://github.com/mongodb/mongo-go-driver). It is different to mgo that we've used last year, however, the core concepts are the same.
+   * You will use **MongoDB**. The recommended driver for MongoDB is the [official MongoDB Go driver](https://github.com/mongodb/mongo-go-driver) or the mgo successor [globalsign/mgo](https://github.com/globalsign/mgo). It is up to the student to decide which one to use. Motivate your choice. Each of them might be slightly different to the old mgo that we've used last year, however, the core concepts are the same and the usage patterns should feel familiar in all of them.
 
 
 ## Deployment
 
-** WORK IN PROGRESS --- this is not a final document yet. ***
-
    * The core logic of the system will stay as in Assignment 1 on Heroku. 
-   * The database (MongoDB) will be stored in mlab.com MongoLabs Sandbox
-   * The ticker END point will be implemented as a Cloud Function
-   * The "clock" trigger will be implemented in Go as independent executable deployed on OpenStack
+   * The database (MongoDB) will be stored in mlab.com MongoLabs Sandbox.
+   * The ticker end-point will be implemented as a Cloud Function [OPTIONAL] or as normal end-point within your Heroku deployment.
+   * The "clock" trigger will be implemented in Go as independent executable deployed on OpenStack.
 
-
+### The following will need to be added as environment variables for the program to run:
+```golang
+PORT=<port>
+MONGO_HOST=<host>
+MONGO_USER=<user>
+MONGO_PASSWORD=<password>
+MONGO_DATABASE=<dbName>
+̈́```
 
 ## General rules
 
-The project should be named **paragliding** and this should be the root of the URL. The server should respond with 404 when asked about the root. The API should be mounted on the **api** path. All the REST verbs will be subsequently attached to the /paragliding/api/* root.
+The project should be named **paragliding** and this should be the root of the URL. The server should respond with 404 when asked about rubbish URLs. The API should be mounted on the **api** path. All the REST verbs will be subsequently attached to the /paragliding/api/* root.
 
 ```
+http://localhost:8080/paragliding/api            -> root URL, responds with meta info about API, see GET /api
 http://localhost:8080/paragliding/               -> redirect to /paragliding/api
 http://localhost:8080/paragliding/<rubbish>      -> 404
 http://localhost:8080/<rubbish>                  -> 404
@@ -41,7 +50,8 @@ http://localhost:8080/paragliding/api/<rubbish>  -> 404
 
 ### Track timestamps
 
-Each track, ie. each IGC file uploaded to the system, will have a timestamp represented as a LONG number, that must be unique, and monotonic. This can be achieved by storing a milisecond of the upload time to the server, although, you have to plan how to make it thread safe. This is relevant for the ticker API. 
+Each track, ie. each IGC file uploaded to the system, will have a timestamp represented as a LONG number, that must be unique and monotonic. This can be achieved by storing a milisecond of the upload time to the server, although, you have to plan how to make it thread safe and scalable. This is relevant for the ticker API. Hint - you could use mongoDB IDs that are monotonic, but then you would have some security considerations - think which ones. 
+
 
 
 ### Ticker API
@@ -234,6 +244,8 @@ When invoking a registered webhook, use POST with the webhookURL and the followi
 }
 ```
 
+Note: the body should only include the NEW tracks ids. Not the entire collection.
+
 
 ### GET /api/webhook/new_track/`<webhook_id>`
 
@@ -271,6 +283,13 @@ When invoking a registered webhook, use POST with the webhookURL and the followi
 }
 ```
 
+
+## Clock trigger
+
+The idea behind the clock is to have a task that happens on regular basis without user interventions. In our case, you will implement a task, that checks every 10min if the number of tracks differs from the previous check, and if it does, it will notify a predefined Slack webhook. The actual webhook can be hardcoded in the system, or configured via some environmental variables - think which solution is better and why. 
+
+
+
 ## Admin API 
 
 *Note*: The endpoints below should be either not exposed at all, or should be exposed to ADMIN users only. Best practice is to keep them in a completely different API root, prefixed with something unique, or keep the URL different to the publicly exposed API. Here, we are making it extremely simplistic exclusively for testing purposes.
@@ -296,7 +315,4 @@ When invoking a registered webhook, use POST with the webhookURL and the followi
 ## Resources
 
 * [Go IGC library](https://github.com/marni/goigc)
-* [official MongoDB Go driver](https://github.com/mongodb/mongo-go-driver)
-
-
-
+* successor of mgo driver: [globalsign/mgo](https://github.com/globalsign/mgo)

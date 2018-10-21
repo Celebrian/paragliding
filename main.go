@@ -1,40 +1,43 @@
 package main
 
 import (
-	"github.com/globalsign/mgo"
+	"fmt"
 	"net/http"
+	"os"
 	"time"
+
+	"github.com/globalsign/mgo/bson"
+
+	"github.com/globalsign/mgo"
 )
 
 //StartTime is service start time
 var startTime = time.Now()
 
-const (
-	MongoDBHosts = "ds137643.mlab.com:37643"
-	MongoDatabase = "paragliding"
-	MongoUser	= "databaseuser"
-	MongoPassword = "databasepassword1"
-
-)
-
+// IGCObject is the struct for track information we have deemed relevant
 type IGCObject struct {
-	URL			string		`json:"track_scr_url" bson:"track_scr_url"`
-	Pilot		string		`json:"pilot" bson:"pilot"`
-	HDate		time.Time	`json:"H_date" bson:"H_date"`
-	Glider		string		`json:"glider" bson:"glider"`
-	GliderID	string		`json:"glider_id" bson:"glider_id"`
-	TrackLength	float64		`json:"track_length" bson:"track_length"`
+	ID          bson.ObjectId `json:"id" bson:"_id"`
+	URL         string        `json:"url" bson:"track_scr_url"`
+	Pilot       string        `json:"pilot" bson:"pilot"`
+	HDate       time.Time     `json:"H_date" bson:"H_date"`
+	Glider      string        `json:"glider" bson:"glider"`
+	GliderID    string        `json:"glider_id" bson:"glider_id"`
+	TrackLength float64       `json:"track_length" bson:"track_length"`
+	Timestamp   int64         `json:"timestamp" bson:"timestamp"`
 }
 
 var db *mgo.Database
 
+var collection *mgo.Collection
+
 func main() {
+	fmt.Println("MAIN STARTED")
 	mongoDialInfo := &mgo.DialInfo{
-		Addrs:    []string{MongoDBHosts},
+		Addrs:    []string{os.Getenv("MONGO_HOST")},
 		Timeout:  60 * time.Second,
-		Database: MongoDatabase,
-		Username: MongoUser,
-		Password: MongoPassword,
+		Database: os.Getenv("MONGO_DATABASE"),
+		Username: os.Getenv("MONGO_USER"),
+		Password: os.Getenv("MONGO_PASSWORD"),
 	}
 
 	//Database connection
@@ -42,15 +45,15 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	session.Close()
 
-	db = session.DB(MongoDatabase)
+	db = session.DB(mongoDialInfo.Database)
+	collection = db.C("tracks")
 
 	//Send all requests to the router
 	http.HandleFunc("/", router)
 
 	//Start web server
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("PORT"), nil); err != nil {
 		panic(err)
 	}
 }

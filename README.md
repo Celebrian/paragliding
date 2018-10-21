@@ -25,13 +25,12 @@ You can re-use Assignment 1 codebase, and substitute the internal in-memory stor
    * The "clock" trigger will be implemented in Go as independent executable deployed on OpenStack.
 
 ### The following will need to be added as environment variables for the program to run:
-```
-PORT=<port>
-MONGO_HOST=<host>
-MONGO_USER=<user>
-MONGO_PASSWORD=<password>
-MONGO_DATABASE=<dbName>
-̈́```
+
+    PORT=<port>
+    MONGO_HOST=<host>
+    MONGO_USER=<user>
+    MONGO_PASSWORD=<password>
+    MONGO_DATABASE=<dbName>
 
 ## General rules
 

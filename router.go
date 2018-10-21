@@ -9,7 +9,7 @@ import (
 //nolint: gocyclo
 func router(w http.ResponseWriter, r *http.Request) {
 	//Build regex expressions for the url and handle possible errors
-	redirectApi, err := regexp.Compile("^/paragliding/?$")
+	redirectAPI, err := regexp.Compile("^/paragliding/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile redirect regex")
 		return
@@ -59,12 +59,12 @@ func router(w http.ResponseWriter, r *http.Request) {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/webhook/id regex")
 		return
 	}
-	adminApiTrackCount, err := regexp.Compile("/paragliding/admin/api/tracks_count/?$")
+	adminAPITrackCount, err := regexp.Compile("/paragliding/admin/api/tracks_count/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile admin/api/track_count regex")
 		return
 	}
-	adminApiTracks, err := regexp.Compile("/paragliding/admin/tracks/?$")
+	adminAPITracks, err := regexp.Compile("/paragliding/admin/tracks/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile admin/api/tracks regex")
 	}
@@ -73,13 +73,13 @@ func router(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet || r.Method == http.MethodPost || r.Method == http.MethodDelete {
 		//Switch on the request url path and select handler
 		switch {
-		case redirectApi.MatchString(r.URL.Path):
+		case redirectAPI.MatchString(r.URL.Path):
 			http.Redirect(w, r, "/paragliding/api", http.StatusPermanentRedirect)
 		case apiHandler.MatchString(r.URL.Path):
 			handleAPI(w)
 		case apiTrackHandler.MatchString(r.URL.Path):
 			if r.Method == http.MethodPost {
-
+				trackPOST(w, r)
 			} else if r.Method == http.MethodGet {
 
 			}
@@ -90,8 +90,8 @@ func router(w http.ResponseWriter, r *http.Request) {
 		case apiTickerTimestamp.MatchString(r.URL.Path):
 		case apiWebhookNewTrack.MatchString(r.URL.Path):
 		case apiWebhookID.MatchString(r.URL.Path):
-		case adminApiTrackCount.MatchString(r.URL.Path):
-		case adminApiTracks.MatchString(r.URL.Path):
+		case adminAPITrackCount.MatchString(r.URL.Path):
+		case adminAPITracks.MatchString(r.URL.Path):
 		default:
 			errStatus(w, http.StatusNotFound, nil, "")
 		}

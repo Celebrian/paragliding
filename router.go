@@ -24,47 +24,47 @@ func router(w http.ResponseWriter, r *http.Request) {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/track regex")
 		return
 	}
-	apiTrackIDHandler, err := regexp.Compile("^/paragliding/api/track/[0-9]+/?$")
+	apiTrackIDHandler, err := regexp.Compile("^/paragliding/api/track/[a-f0-9]{24}/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/igc/<id> regex")
 		return
 	}
-	apiTrackIDFieldHandler, err := regexp.Compile("/paragliding/api/track/[0-9]+/(pilot|glider|glider_id|track_length|H_date)$")
+	apiTrackIDFieldHandler, err := regexp.Compile("^/paragliding/api/track/[a-f0-9]{24}/(pilot|glider|glider_id|track_length|H_date)$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/track/<id>/<field> regex")
 		return
 	}
-	apiTicker, err := regexp.Compile("/paragliding/api/ticker/?$")
+	apiTicker, err := regexp.Compile("^/paragliding/api/ticker/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/ticker regex")
 		return
 	}
-	apiTickerLatest, err := regexp.Compile("/paragliding/api/ticker/latest/?$")
+	apiTickerLatest, err := regexp.Compile("^/paragliding/api/ticker/latest/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/ticker/latest regex")
 		return
 	}
-	apiTickerTimestamp, err := regexp.Compile("/paragliding/api/ticker/latest/[0-9]+/?$")
+	apiTickerTimestamp, err := regexp.Compile("^/paragliding/api/ticker/latest/[0-9]+/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/ticker/timestamp regex")
 		return
 	}
-	apiWebhookNewTrack, err := regexp.Compile("/paragliding/api/webhook/new_track/?$")
+	apiWebhookNewTrack, err := regexp.Compile("^/paragliding/api/webhook/new_track/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/webhook regex")
 		return
 	}
-	apiWebhookID, err := regexp.Compile("/paragliding/api/webhook/new_track/id/?$")
+	apiWebhookID, err := regexp.Compile("^/paragliding/api/webhook/new_track/id/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/webhook/id regex")
 		return
 	}
-	adminAPITrackCount, err := regexp.Compile("/paragliding/admin/api/tracks_count/?$")
+	adminAPITrackCount, err := regexp.Compile("^/paragliding/admin/api/tracks_count/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile admin/api/track_count regex")
 		return
 	}
-	adminAPITracks, err := regexp.Compile("/paragliding/admin/tracks/?$")
+	adminAPITracks, err := regexp.Compile("^/paragliding/admin/tracks/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile admin/api/tracks regex")
 	}
@@ -78,15 +78,20 @@ func router(w http.ResponseWriter, r *http.Request) {
 		case apiHandler.MatchString(r.URL.Path):
 			handleAPI(w)
 		case apiTrackHandler.MatchString(r.URL.Path):
+			//The response should have header type json no matter what
+			w.Header().Set("Content-Type", "application/json")
 			if r.Method == http.MethodPost {
 				trackPOST(w, r)
 			} else if r.Method == http.MethodGet {
-
+				trackGET(w, r)
 			}
 		case apiTrackIDHandler.MatchString(r.URL.Path):
+			getOne(w, r)
 		case apiTrackIDFieldHandler.MatchString(r.URL.Path):
+			getField(w, r)
 		case apiTicker.MatchString(r.URL.Path):
 		case apiTickerLatest.MatchString(r.URL.Path):
+			getLatest(w, r)
 		case apiTickerTimestamp.MatchString(r.URL.Path):
 		case apiWebhookNewTrack.MatchString(r.URL.Path):
 		case apiWebhookID.MatchString(r.URL.Path):
@@ -103,9 +108,13 @@ func router(w http.ResponseWriter, r *http.Request) {
 
 //Write status header and body with status code, error if exist, and possible extra info
 func errStatus(w http.ResponseWriter, status int, err error, extraInfo string) {
-	if err != nil {
+	if err != nil && extraInfo != "" {
 		http.Error(w, fmt.Sprintf("%s\n%s\n%s", http.StatusText(status), err, extraInfo), status)
-	} else {
+	} else if extraInfo != "" {
+		http.Error(w, fmt.Sprintf("%s\n%s", http.StatusText(status), err), status)
+	} else if err != nil {
 		http.Error(w, fmt.Sprintf("%s\n%s", http.StatusText(status), extraInfo), status)
+	} else {
+		http.Error(w, http.StatusText(status), status)
 	}
 }

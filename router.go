@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 )
 
 //nolint: gocyclo
@@ -29,7 +30,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/igc/<id> regex")
 		return
 	}
-	apiTrackIDFieldHandler, err := regexp.Compile("^/paragliding/api/track/[a-f0-9]{24}/(pilot|glider|glider_id|track_length|H_date)$")
+	apiTrackIDFieldHandler, err := regexp.Compile("^/paragliding/api/track/[a-f0-9]{24}/(pilot|glider|glider_id|track_length|H_date)/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/track/<id>/<field> regex")
 		return
@@ -44,7 +45,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/ticker/latest regex")
 		return
 	}
-	apiTickerTimestamp, err := regexp.Compile("^/paragliding/api/ticker/latest/[0-9]+/?$")
+	apiTickerTimestamp, err := regexp.Compile("^/paragliding/api/ticker/[0-9]+/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/ticker/timestamp regex")
 		return
@@ -90,9 +91,14 @@ func router(w http.ResponseWriter, r *http.Request) {
 		case apiTrackIDFieldHandler.MatchString(r.URL.Path):
 			getField(w, r)
 		case apiTicker.MatchString(r.URL.Path):
+			returnTicker(w, r)
 		case apiTickerLatest.MatchString(r.URL.Path):
-			getLatest(w, r)
+			_, err = w.Write([]byte(strconv.FormatInt(getLatest(w), 10)))
+			if err != nil {
+				errStatus(w, http.StatusInternalServerError, err, "Could not write timestamp")
+			}
 		case apiTickerTimestamp.MatchString(r.URL.Path):
+			returnTicker(w, r)
 		case apiWebhookNewTrack.MatchString(r.URL.Path):
 		case apiWebhookID.MatchString(r.URL.Path):
 		case adminAPITrackCount.MatchString(r.URL.Path):
@@ -101,7 +107,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 			errStatus(w, http.StatusNotFound, nil, "")
 		}
 	} else {
-		errStatus(w, http.StatusNotImplemented, nil, "")
+		errStatus(w, http.StatusMethodNotAllowed, nil, "")
 	}
 
 }

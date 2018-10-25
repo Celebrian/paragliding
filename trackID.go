@@ -32,10 +32,11 @@ func getOne(w http.ResponseWriter, r *http.Request) {
 func getField(w http.ResponseWriter, r *http.Request) {
 	var track IGCObject
 
+	//Clean path to remove trailing /
+	temp := path.Clean(r.URL.Path)
 	//Extract ID and convert to int
-	temp := path.Dir(r.URL.Path)
+	temp = path.Dir(temp)
 	id := path.Base(temp)
-
 	//Check if ID exists in database, if not write 404 error
 	err := collection.FindId(bson.ObjectIdHex(id)).One(&track)
 	if err != nil {

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -16,7 +15,7 @@ var startTime = time.Now()
 
 // IGCObject is the struct for track information we have deemed relevant
 type IGCObject struct {
-	ID          bson.ObjectId `json:"id" bson:"_id"`
+	ID          bson.ObjectId `json:"id" bson:"_id,omitempty"`
 	URL         string        `json:"url" bson:"track_scr_url"`
 	Pilot       string        `json:"pilot" bson:"pilot"`
 	HDate       time.Time     `json:"H_date" bson:"H_date"`
@@ -31,7 +30,6 @@ var db *mgo.Database
 var collection *mgo.Collection
 
 func main() {
-	fmt.Println("MAIN STARTED")
 	mongoDialInfo := &mgo.DialInfo{
 		Addrs:    []string{os.Getenv("MONGO_HOST")},
 		Timeout:  60 * time.Second,

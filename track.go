@@ -79,6 +79,19 @@ func trackPOST(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func trackGET(w http.ResponseWriter, r *http.Request) {
+	var allTracks []IGCObject
+	var allIDs []string
+	err := collection.Find(nil).All(&allTracks)
+	if err != nil {
+		errStatus(w, http.StatusInternalServerError, err, "collection.indexes")
+	}
+	for i := 0; i < len(allTracks); i++ {
+		allIDs = append(allIDs, allTracks[i].ID.Hex())
+	}
+	json.NewEncoder(w).Encode(allIDs)
+}
+
 //lengthCalc calculates track length based on example found here:
 //https://github.com/marni/goigc/blob/master/doc_test.go
 func lengthCalc(track igc.Track) float64 {

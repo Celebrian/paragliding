@@ -10,6 +10,9 @@ import (
 	"github.com/globalsign/mgo"
 )
 
+//Const for size of paging
+const pagingSize = 5
+
 //StartTime is service start time
 var startTime = time.Now()
 

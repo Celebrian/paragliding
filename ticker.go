@@ -13,7 +13,7 @@ func getLatest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = collection.Find(nil).skip(dbSize - 1).One(&latest)
+	err = collection.Find(nil).Skip(dbSize - 1).One(&latest)
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Error getting latest track in ticker.go")
 		return

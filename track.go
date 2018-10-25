@@ -89,7 +89,10 @@ func trackGET(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(allTracks); i++ {
 		allIDs = append(allIDs, allTracks[i].ID.Hex())
 	}
-	json.NewEncoder(w).Encode(allIDs)
+	err = json.NewEncoder(w).Encode(allIDs)
+	if err != nil {
+		errStatus(w, http.StatusInternalServerError, err, "Failed json encoding for allIDs in trackGET")
+	}
 }
 
 //lengthCalc calculates track length based on example found here:

@@ -13,6 +13,7 @@ import (
 )
 
 func trackPOST(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	//ReturnID is the format for the returned id after an inserted track
 	type ReturnID struct {
 		ID string `json:"id"`
@@ -77,9 +78,11 @@ func trackPOST(w http.ResponseWriter, r *http.Request) {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to encode return json payload")
 		return
 	}
+	invokeWebhooks(w)
 }
 
-func trackGET(w http.ResponseWriter, r *http.Request) {
+func trackGET(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
 	var allTracks []IGCObject
 	var allIDs []string
 	err := collection.Find(nil).All(&allTracks)

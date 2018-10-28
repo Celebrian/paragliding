@@ -31,6 +31,7 @@ type IGCObject struct {
 var db *mgo.Database
 
 var collection *mgo.Collection
+var webhooks *mgo.Collection
 
 func main() {
 	mongoDialInfo := &mgo.DialInfo{
@@ -49,6 +50,7 @@ func main() {
 
 	db = session.DB(mongoDialInfo.Database)
 	collection = db.C("tracks")
+	webhooks = db.C("webhooks")
 
 	//Send all requests to the router
 	http.HandleFunc("/", router)

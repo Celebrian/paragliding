@@ -28,8 +28,6 @@ type IGCObject struct {
 	Timestamp   int64         `json:"timestamp" bson:"timestamp"`
 }
 
-var db *mgo.Database
-
 var collection *mgo.Collection
 var webhooks *mgo.Collection
 
@@ -48,7 +46,7 @@ func main() {
 		panic(err)
 	}
 
-	db = session.DB(mongoDialInfo.Database)
+	db := session.DB(mongoDialInfo.Database)
 	collection = db.C("tracks")
 	webhooks = db.C("webhooks")
 

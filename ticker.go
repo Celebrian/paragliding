@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/globalsign/mgo/bson"
 )
 
 func getLatest(w http.ResponseWriter) int64 {
@@ -50,17 +52,17 @@ func returnTicker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !base {
-		start, stop, tracks = getTracks(w, 0, latest)
+		start, stop, tracks = getTracks(w, 0, latest, pagingSize)
 
 	} else {
 		temp := path.Clean(r.URL.Path)
 		temp = path.Base(temp)
-		ts, err := strconv.Atoi(temp)
-		if err != nil {
-			errStatus(w, http.StatusInternalServerError, err, "Could not convert url to int in returnTicker")
+		ts, er := strconv.Atoi(temp)
+		if er != nil {
+			errStatus(w, http.StatusInternalServerError, er, "Could not convert url to int in returnTicker")
 			return
 		}
-		start, stop, tracks = getTracks(w, int64(ts), latest)
+		start, stop, tracks = getTracks(w, int64(ts), latest, pagingSize)
 	}
 
 	processing := int64(time.Now().Sub(startFunction).Seconds() * 1000)
@@ -78,26 +80,29 @@ func returnTicker(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getTracks(w http.ResponseWriter, timestamp int64, latest int64) (start int64, stop int64, tracks []string) {
+func getTracks(w http.ResponseWriter, timestamp int64, latest int64, amount int) (start int64, stop int64, tracks []string) {
 	var allTracks []IGCObject
-	err := collection.Find(nil).Sort("timestamp").All(&allTracks)
-	if err != nil {
-		errStatus(w, http.StatusInternalServerError, err, "collection.indexes")
-	}
-	var nr int
-	for i, object := range allTracks {
-		if object.Timestamp > timestamp {
-			start = object.Timestamp
-			tracks = append(tracks, object.ID.Hex())
-			nr = i
-			break
+	if amount == pagingSize {
+		err := collection.Find(bson.M{"timestamp": bson.M{"$gt": timestamp}}).Limit(pagingSize).All(&allTracks)
+		if err != nil {
+			errStatus(w, http.StatusInternalServerError, err, "collection.indexes")
+		}
+		for i := 0; len(tracks) != pagingSize && stop != latest; i++ {
+			tracks = append(tracks, allTracks[i].ID.Hex())
+			stop = allTracks[i].Timestamp
+		}
+	} else {
+		err := collection.Find(bson.M{"timestamp": bson.M{"$gt": timestamp}}).All(&allTracks)
+		if err != nil {
+			errStatus(w, http.StatusInternalServerError, err, "collection.indexes")
+		}
+		for i := 0; stop != latest; i++ {
+			tracks = append(tracks, allTracks[i].ID.Hex())
+			stop = allTracks[i].Timestamp
 		}
 	}
-	for len(tracks) != pagingSize && stop != latest {
-		nr++
-		tracks = append(tracks, allTracks[nr].ID.Hex())
-		stop = allTracks[nr].Timestamp
-	}
+
+	start = allTracks[0].Timestamp
 
 	return start, stop, tracks
 }

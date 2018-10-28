@@ -55,7 +55,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/webhook regex")
 		return
 	}
-	apiWebhookID, err := regexp.Compile("^/paragliding/api/webhook/new_track/id/?$")
+	apiWebhookID, err := regexp.Compile("^/paragliding/api/webhook/new_track/[0-9a-f]{24}/?$")
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to compile api/webhook/id regex")
 		return
@@ -81,7 +81,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 			case apiHandler.MatchString(r.URL.Path):
 				handleAPI(w)
 			case apiTrackHandler.MatchString(r.URL.Path):
-				trackGET(w, r)
+				trackGET(w)
 			case apiTrackIDHandler.MatchString(r.URL.Path):
 				getOne(w, r)
 			case apiTrackIDFieldHandler.MatchString(r.URL.Path):
@@ -93,9 +93,12 @@ func router(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					errStatus(w, http.StatusInternalServerError, err, "Could not write timestamp")
 				}
+			case apiWebhookID.MatchString(r.URL.Path):
+				getWebhook(w, r)
 			case apiTickerTimestamp.MatchString(r.URL.Path):
 				returnTicker(w, r)
 			case adminAPITrackCount.MatchString(r.URL.Path):
+				getAllTracks(w, r)
 			case adminAPITracks.MatchString(r.URL.Path):
 			default:
 				errStatus(w, http.StatusNotFound, nil, "")
@@ -106,6 +109,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 			case apiTrackHandler.MatchString(r.URL.Path):
 				trackPOST(w, r)
 			case apiWebhookNewTrack.MatchString(r.URL.Path):
+				newTrack(w, r)
 			default:
 				errStatus(w, http.StatusNotFound, nil, "")
 			}
@@ -113,10 +117,12 @@ func router(w http.ResponseWriter, r *http.Request) {
 		} else {
 			switch {
 			case apiWebhookID.MatchString(r.URL.Path):
+				getWebhook(w, r)
+			case adminAPITracks.MatchString(r.URL.Path):
+				getAllTracks(w, r)
 			default:
 				errStatus(w, http.StatusNotFound, nil, "")
 			}
-
 		}
 	} else {
 		errStatus(w, http.StatusMethodNotAllowed, nil, "")
@@ -128,9 +134,9 @@ func router(w http.ResponseWriter, r *http.Request) {
 func errStatus(w http.ResponseWriter, status int, err error, extraInfo string) {
 	if err != nil && extraInfo != "" {
 		http.Error(w, fmt.Sprintf("%s\n%s\n%s", http.StatusText(status), err, extraInfo), status)
-	} else if extraInfo != "" {
-		http.Error(w, fmt.Sprintf("%s\n%s", http.StatusText(status), err), status)
 	} else if err != nil {
+		http.Error(w, fmt.Sprintf("%s\n%s", http.StatusText(status), err), status)
+	} else if extraInfo != "" {
 		http.Error(w, fmt.Sprintf("%s\n%s", http.StatusText(status), extraInfo), status)
 	} else {
 		http.Error(w, http.StatusText(status), status)

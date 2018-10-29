@@ -89,6 +89,7 @@ func router(w http.ResponseWriter, r *http.Request) {
 			case apiTicker.MatchString(r.URL.Path):
 				returnTicker(w, r)
 			case apiTickerLatest.MatchString(r.URL.Path):
+				//getLatest returns int64, so it can be used elsewhere, so cast, write and handle error here
 				_, err = w.Write([]byte(strconv.FormatInt(getLatest(w), 10)))
 				if err != nil {
 					errStatus(w, http.StatusInternalServerError, err, "Could not write timestamp")

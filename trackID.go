@@ -9,17 +9,22 @@ import (
 	"github.com/globalsign/mgo/bson"
 )
 
+//Get one track from database
 func getOne(w http.ResponseWriter, r *http.Request) {
-	id := path.Base(r.URL.Path)
+	//Clean and get the ID from URL
+	id := path.Clean(r.URL.Path)
+	id = path.Base(id)
 	var track IGCObject
 
 	//The response should have header type json
 	w.Header().Set("Content-Type", "application/json")
+	//Get track from database with the ID from the URL
 	err := collection.FindId(bson.ObjectIdHex(id)).One(&track)
 	if err != nil {
 		errStatus(w, http.StatusBadRequest, err, "No track with that ID in the database")
 		return
 	}
+	//Encode and post the track
 	err = json.NewEncoder(w).Encode(track)
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Failed to encode return json payload")

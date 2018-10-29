@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+//Get the number of tracks in the database, and if the method is delete, delete all of them
 func getAllTracks(w http.ResponseWriter, r *http.Request) {
 	number, err := collection.Count()
 	if err != nil {
@@ -14,7 +15,7 @@ func getAllTracks(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		errStatus(w, http.StatusInternalServerError, err, "Could not write number of tracks to page")
 	}
-
+	//If method=delete, remove all tracks
 	if r.Method == http.MethodDelete {
 		err = collection.DropAllIndexes()
 		if err != nil {
